@@ -69,6 +69,27 @@ did_tbl <- gap_summary %>%
   pivot_wider(names_from = risk, values_from = mean_gap) %>%
   mutate(DoD_Hc_minus_Lc = Hc - Lc)
 
+# DoD SE from run-level paired contrast
+did_se_tbl <- gap_by_run %>%
+  select(model, run, risk, gap_performance, gap_AC, gap_RT) %>%
+  pivot_wider(names_from = risk, values_from = c(gap_performance, gap_AC, gap_RT)) %>%
+  mutate(
+    dod_performance = gap_performance_Hc - gap_performance_Lc,
+    dod_AC = gap_AC_Hc - gap_AC_Lc,
+    dod_RT = gap_RT_Hc - gap_RT_Lc
+  ) %>%
+  pivot_longer(starts_with("dod_"), names_to = "metric_key", values_to = "dod") %>%
+  mutate(metric = recode(
+    metric_key,
+    dod_performance = "Performance (bonus - payoff)",
+    dod_AC = "AC (bonus - payoff)",
+    dod_RT = "RT (bonus - payoff)"
+  )) %>%
+  group_by(model, metric) %>%
+  summarise(DoD_se = sd(dod, na.rm = TRUE) / sqrt(n()), .groups = "drop")
+
+did_tbl <- did_tbl %>% left_join(did_se_tbl, by = c("model", "metric"))
+
 fit_interaction <- function(df, y) {
   fit <- lm(as.formula(paste0(y, " ~ strategy * risk")), data = df)
   co <- summary(fit)$coefficients
@@ -113,21 +134,29 @@ p_rt <- ggplot(bp_summary, aes(x = risk, y = RT_mean, color = strategy, group = 
   facet_wrap(~ model) + theme_bw(base_size = 11) +
   labs(title = "RT", x = "Risk", y = "Mean RT", color = "Strategy")
 
-fig_interaction <- (p_perf / p_ac / p_rt) + plot_annotation(title = "V2 Detailed: Strategy x Risk Interaction")
+fig_interaction <- (p_perf / p_ac / p_rt) +
+  plot_annotation(
+    title = "Strategy x Risk Interaction",
+    theme = theme(plot.title = element_text(hjust = 0.5))
+  )
 ggsave(file.path(fig_dir, "24_v2_strategy_risk_interaction_detailed.png"), fig_interaction, width = 10, height = 12, dpi = 300)
 
 fig_did <- ggplot(did_tbl, aes(x = metric, y = DoD_Hc_minus_Lc, fill = model)) +
   geom_col(position = position_dodge(width = 0.7), width = 0.62) +
+  geom_errorbar(
+    aes(ymin = DoD_Hc_minus_Lc - DoD_se, ymax = DoD_Hc_minus_Lc + DoD_se),
+    position = position_dodge(width = 0.7), width = 0.2, linewidth = 0.3
+  ) +
   geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.3) +
   scale_fill_manual(values = c("original" = "#4C78A8", "adapted" = "#F58518")) +
   theme_bw(base_size = 11) +
   theme(
-    axis.text.x = element_text(angle = 15, hjust = 1),
+    axis.text.x = element_text(angle = 15, hjust = 1, size = 12),
     plot.title = element_text(hjust = 0.5),
     plot.subtitle = element_text(hjust = 0.5)
   ) +
   labs(
-    title = "V2 Detailed: Difference-in-Differences",
+    title = "Difference-in-Differences of Strategy Gap",
     subtitle = "[(bonus - payoff) in Hc] - [(bonus - payoff) in Lc]",
     x = "Metric",
     y = "DoD (Hc - Lc)",
@@ -172,8 +201,8 @@ combo_dod <- combo_risk_effect %>%
 # Heatmap: combo-level performance DoD (cell size follows parameter step)
 combo_dod_plot <- combo_dod %>%
   mutate(
-    x_half = 2.5,  # both groups use schema step = 5
-    y_half = if_else(strategy == "bonus_oriented", 2.5, 1.25), # bonus step=5, payoff step=2.5
+    x_half = 2.5,
+    y_half = if_else(strategy == "bonus_oriented", 2.5, 1.25),
     xmin = thres_schema - x_half,
     xmax = thres_schema + x_half,
     ymin = thres_item_final - y_half,
@@ -279,4 +308,4 @@ saveRDS(
   file = file.path(fig_dir, "v2_detailed_analysis_data.rds")
 )
 
-cat("Detailed V2 analysis completed (concise outputs). Saved to:", fig_dir, "\n")
+cat("Detailed analysis completed. Saved to:", fig_dir, "\n")
