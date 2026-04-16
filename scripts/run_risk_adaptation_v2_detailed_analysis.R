@@ -1,7 +1,7 @@
 library(tidyverse)
 library(patchwork)
 
-results_dir <- "results/final_v2_combo19"
+results_dir <- "../results/final_v2_combo19"
 fig_dir <- file.path(results_dir, "figures")
 dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
 
@@ -119,8 +119,13 @@ ggsave(file.path(fig_dir, "24_v2_strategy_risk_interaction_detailed.png"), fig_i
 fig_did <- ggplot(did_tbl, aes(x = metric, y = DoD_Hc_minus_Lc, fill = model)) +
   geom_col(position = position_dodge(width = 0.7), width = 0.62) +
   geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.3) +
+  scale_fill_manual(values = c("original" = "#4C78A8", "adapted" = "#F58518")) +
   theme_bw(base_size = 11) +
-  theme(axis.text.x = element_text(angle = 15, hjust = 1)) +
+  theme(
+    axis.text.x = element_text(angle = 15, hjust = 1),
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5)
+  ) +
   labs(
     title = "V2 Detailed: Difference-in-Differences",
     subtitle = "[(bonus - payoff) in Hc] - [(bonus - payoff) in Lc]",
@@ -164,13 +169,44 @@ combo_dod <- combo_risk_effect %>%
     dod_RT = risk_effect_RT_adapted - risk_effect_RT_original
   )
 
-# Heatmap: combo-level performance DoD
-fig_combo_heat <- combo_dod %>%
-  ggplot(aes(x = thres_schema, y = thres_item_final, fill = dod_perf)) +
-  geom_tile(color = "white") +
-  facet_wrap(~ strategy) +
-  scale_fill_gradient2(low = "#B91C1C", mid = "white", high = "#065F46", midpoint = 0) +
+# Heatmap: combo-level performance DoD (cell size follows parameter step)
+combo_dod_plot <- combo_dod %>%
+  mutate(
+    x_half = 2.5,  # both groups use schema step = 5
+    y_half = if_else(strategy == "bonus_oriented", 2.5, 1.25), # bonus step=5, payoff step=2.5
+    xmin = thres_schema - x_half,
+    xmax = thres_schema + x_half,
+    ymin = thres_item_final - y_half,
+    ymax = thres_item_final + y_half
+  )
+
+strategy_labels <- combo_dod_plot %>%
+  group_by(strategy) %>%
+  summarise(
+    label_x = mean(thres_schema, na.rm = TRUE),
+    label_y = max(ymax, na.rm = TRUE) + 0.8,
+    .groups = "drop"
+  ) %>%
+  mutate(label = if_else(strategy == "bonus_oriented", "bonus_oriented", "payoff_oriented"))
+
+fig_combo_heat <- combo_dod_plot %>%
+  ggplot(aes(fill = dod_perf)) +
+  geom_rect(aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax), color = "white") +
+  geom_text(
+    data = strategy_labels,
+    aes(x = label_x, y = label_y, label = label),
+    inherit.aes = FALSE,
+    size = 3.2,
+    fontface = "bold"
+  ) +
+  scale_fill_gradient2(low = "#4C78A8", mid = "#F7F7F7", high = "#F58518", midpoint = 0) +
   theme_bw(base_size = 11) +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5),
+    axis.text.x = element_text(angle = 0, hjust = 0.5)
+  ) +
+  coord_fixed(ratio = 1) +
   labs(
     title = "Combo-level DoD Heatmap (Performance)",
     subtitle = "DoD = [Hc-Lc]_adapted - [Hc-Lc]_original",

@@ -1,4 +1,0 @@
-strategy,mean_AC,mean_RT,mean_performance,sd_AC_between_params,sd_RT_between_params,sd_performance_between_params,n_param_combos
-baseline,0.3602941176470588,28.488584803921615,28.988398692810456,NA,NA,NA,1
-bonus_oriented,0.41797179672179674,56.95933993525033,31.104258704258704,NA,NA,NA,9
-payoff_oriented,0.31613540591675265,22.1505995469031,26.66222986660551,NA,NA,NA,9

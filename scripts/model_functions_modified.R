@@ -106,7 +106,7 @@ simulation <- function(Param.df, type, exp_type, save=F, savepath="",
                        model.version=c(1,2,3)[1],
                        scale.confi.init,
                        use_risk_adaptation = FALSE,
-                       risk_thres_shift = 10){
+                       risk_low_multiplier = 0.9){
   ## df initialization
   subjectnum = nrow(Param.df)
   simupath = file.path(savepath, type)
@@ -403,10 +403,11 @@ simulation <- function(Param.df, type, exp_type, save=F, savepath="",
         }
         
         ThisPhase = ifelse(decisiontime == 1, (ThisRound*2)-1, ThisRound*2)
-        # risk-dependent final item threshold
+        # risk-dependent final item threshold (v2):
+        # low risk -> multiply by risk_low_multiplier, high risk -> unchanged
         if (use_risk_adaptation) {
-          if (risk == "high") {
-            thres_item_final = thres_item_final_base + risk_thres_shift
+          if (risk == "low") {
+            thres_item_final = thres_item_final_base * risk_low_multiplier
           } else {
             thres_item_final = thres_item_final_base
           }

@@ -3,14 +3,13 @@
 # ============================================
 
 library(tidyverse)
-library(ggpubr)
 library(patchwork)
 
 # ============================================
 # 1. Read the pre-computed results
 # ============================================
 
-output_dir <- "results/agent_comparison"
+output_dir <- "../results/agent_comparison"
 all_results <- read_csv(file.path(output_dir, "agent_results_raw.csv"), show_col_types = FALSE)
 
 cat(sprintf("Loaded %d rows of data\n", nrow(all_results)))
@@ -84,27 +83,12 @@ test_data_perf <- param_summary %>%
   filter(strategy %in% c("bonus_oriented", "payoff_oriented"))
 
 t_test_perf <- t.test(mean_performance ~ strategy, data = test_data_perf)
-p_perf <- t_test_perf$p.value
-p_label_perf <- ifelse(p_perf < 0.001, "p < 0.001", 
-                       ifelse(p_perf < 0.01, "p < 0.01",
-                              ifelse(p_perf < 0.05, "p < 0.05",
-                                     sprintf("p = %.3f", p_perf))))
 
 # AC t-test
 t_test_ac <- t.test(mean_AC ~ strategy, data = test_data_perf)
-p_ac <- t_test_ac$p.value
-p_label_ac <- ifelse(p_ac < 0.001, "p < 0.001", 
-                     ifelse(p_ac < 0.01, "p < 0.01",
-                            ifelse(p_ac < 0.05, "p < 0.05",
-                                   sprintf("p = %.3f", p_ac))))
 
 # RT t-test
 t_test_rt <- t.test(mean_RT ~ strategy, data = test_data_perf)
-p_rt <- t_test_rt$p.value
-p_label_rt <- ifelse(p_rt < 0.001, "p < 0.001", 
-                     ifelse(p_rt < 0.01, "p < 0.01",
-                            ifelse(p_rt < 0.05, "p < 0.05",
-                                   sprintf("p = %.3f", p_rt))))
 
 # ============================================
 # 7. Boxplot: Performance by agent
@@ -114,7 +98,7 @@ boxplot_data_perf <- param_summary %>%
   filter(strategy != "baseline") %>%
   select(strategy, mean_performance)
 
-agent_colors <- c("bonus_oriented" = "#3B82F6", "payoff_oriented" = "#EF4444")
+agent_colors <- c("bonus_oriented" = "#2563EB", "payoff_oriented" = "#DC2626")
 
 # Get y-axis limits for annotation positioning
 y_max_perf <- max(boxplot_data_perf$mean_performance, baseline_performance)
@@ -129,16 +113,14 @@ p_perf_box <- ggplot(boxplot_data_perf, aes(x = strategy, y = mean_performance, 
   annotate("text", x = 1.5, y = baseline_performance - y_range_perf * 0.08, 
            label = paste("Baseline:", round(baseline_performance, 1)), 
            size = 3, color = "#6B7280") +
-  annotate("text", x = 1.5, y = y_max_perf + y_range_perf * 0.05, 
-           label = p_label_perf, size = 4, fontface = "bold") +
   scale_fill_manual(values = agent_colors) +
   labs(x = "Strategy", y = "Mean performance (across parameter combinations)",
-       title = "Performance comparison: Bonus-oriented vs Payoff-oriented",
-       subtitle = paste("Lc condition only | Each point = one parameter combination")) +
+       title = "Performance comparison",
+       subtitle = "Each point = one parameter combination") +
   theme_bw(base_size = 12) +
   theme(
     legend.position = "none",
-    plot.title = element_text(face = "bold"),
+    plot.title = element_text(face = "bold", hjust = 0.5),
     plot.subtitle = element_text(color = "#6B7280", size = 10)
   )
 
@@ -162,16 +144,14 @@ p_ac_box <- ggplot(boxplot_data_ac, aes(x = strategy, y = mean_AC, fill = strate
   annotate("text", x = 1.5, y = baseline_AC - y_range_ac * 0.08, 
            label = paste("Baseline:", round(baseline_AC, 3)), 
            size = 3, color = "#6B7280") +
-  annotate("text", x = 1.5, y = y_max_ac + y_range_ac * 0.05, 
-           label = p_label_ac, size = 4, fontface = "bold") +
   scale_fill_manual(values = agent_colors) +
   labs(x = "Strategy", y = "Mean accuracy (AC)",
-       title = "Accuracy comparison: Bonus-oriented vs Payoff-oriented",
-       subtitle = "Lc condition only | Each point = one parameter combination") +
+       title = "Accuracy comparison",
+       subtitle = "Each point = one parameter combination") +
   theme_bw(base_size = 12) +
   theme(
     legend.position = "none",
-    plot.title = element_text(face = "bold"),
+    plot.title = element_text(face = "bold", hjust = 0.5),
     plot.subtitle = element_text(color = "#6B7280", size = 10)
   )
 
@@ -195,16 +175,14 @@ p_rt_box <- ggplot(boxplot_data_rt, aes(x = strategy, y = mean_RT, fill = strate
   annotate("text", x = 1.5, y = baseline_RT + y_range_rt * 0.08, 
            label = paste("Baseline:", round(baseline_RT, 1)), 
            size = 3, color = "#6B7280") +
-  annotate("text", x = 1.5, y = y_max_rt + y_range_rt * 0.05, 
-           label = p_label_rt, size = 4, fontface = "bold") +
   scale_fill_manual(values = agent_colors) +
   labs(x = "Strategy", y = "Mean reaction time (s)",
-       title = "Reaction time comparison: Bonus-oriented vs Payoff-oriented",
-       subtitle = "Lc condition only | Each point = one parameter combination") +
+       title = "Reaction time comparison",
+       subtitle = "Each point = one parameter combination") +
   theme_bw(base_size = 12) +
   theme(
     legend.position = "none",
-    plot.title = element_text(face = "bold"),
+    plot.title = element_text(face = "bold", hjust = 0.5),
     plot.subtitle = element_text(color = "#6B7280", size = 10)
   )
 
@@ -214,7 +192,7 @@ p_rt_box <- ggplot(boxplot_data_rt, aes(x = strategy, y = mean_RT, fill = strate
 
 combined_plot <- (p_perf_box | p_ac_box | p_rt_box) +
   plot_annotation(
-    title = "Agent comparison under low-risk condition",
+    title = "Agent comparison",
     theme = theme(plot.title = element_text(face = "bold", hjust = 0.5))
   )
 

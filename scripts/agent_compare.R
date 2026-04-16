@@ -164,7 +164,7 @@ cat(sprintf("\nCompleted in %.2f minutes\n", difftime(end_time, start_time, unit
 all_results <- bind_rows(results)
 
 # Create output directory
-output_dir <- "results/agent_comparison"
+output_dir <- "../results/agent_comparison"
 if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
 
 # Save raw data
