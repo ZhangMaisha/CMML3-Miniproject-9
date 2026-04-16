@@ -1,9 +1,10 @@
 library(tidyverse)
+library(patchwork)
 
 #========================
 # 1. Set results directory
 #========================
-results_dir <- "../results/param_scan_20260412"
+results_dir <- "../results/param_scan"
 
 #========================
 # 2. Read and summarize all parameter scan results
@@ -421,28 +422,38 @@ print(p_perf_w)
 print(p_perf_phi)
 print(p_perf_theta_shift)
 
+# Combined 3-panel figures for w/phi/theta_shift (no overall title)
+p_ac_three <- p_ac_w | p_ac_phi | p_ac_theta_shift
+p_rt_three <- p_rt_w | p_rt_phi | p_rt_theta_shift
+p_perf_three <- p_perf_w | p_perf_phi | p_perf_theta_shift
+
 #========================
 # 6. Save figures
 #========================
-fig_dir <- "../results/param_scan_20260412/figures_split"
+fig_dir <- "../results/param_scan/figures_split"
 if (!dir.exists(fig_dir)) dir.create(fig_dir, recursive = TRUE)
 
 ggsave(file.path(fig_dir, "AC_box_line_thres_item_final.png"), p_ac_thres_item_final, width = 7, height = 5, dpi = 300)
 ggsave(file.path(fig_dir, "AC_box_line_thres_schema.png"), p_ac_thres_schema, width = 7, height = 5, dpi = 300)
 ggsave(file.path(fig_dir, "AC_box_line_w.png"), p_ac_w, width = 7, height = 5, dpi = 300)
-ggsave(file.path(fig_dir, "AC_box_line_phi.png"), p_ac_phi, width = 7, height = 5, dpi = 300)
+ggsave(file.path(fig_dir, "AC_box_line_Phi.png"), p_ac_phi, width = 7, height = 5, dpi = 300)
 ggsave(file.path(fig_dir, "AC_box_line_theta_shift.png"), p_ac_theta_shift, width = 7, height = 5, dpi = 300)
 
 ggsave(file.path(fig_dir, "RT_box_line_thres_item_final.png"), p_rt_thres_item_final, width = 7, height = 5, dpi = 300)
 ggsave(file.path(fig_dir, "RT_box_line_thres_schema.png"), p_rt_thres_schema, width = 7, height = 5, dpi = 300)
 ggsave(file.path(fig_dir, "RT_box_line_w.png"), p_rt_w, width = 7, height = 5, dpi = 300)
-ggsave(file.path(fig_dir, "RT_box_line_phi.png"), p_rt_phi, width = 7, height = 5, dpi = 300)
+ggsave(file.path(fig_dir, "RT_box_line_Phi.png"), p_rt_phi, width = 7, height = 5, dpi = 300)
 ggsave(file.path(fig_dir, "RT_box_line_theta_shift.png"), p_rt_theta_shift, width = 7, height = 5, dpi = 300)
 
 ggsave(file.path(fig_dir, "Performance_box_line_thres_item_final.png"), p_perf_thres_item_final, width = 7, height = 5, dpi = 300)
 ggsave(file.path(fig_dir, "Performance_box_line_thres_schema.png"), p_perf_thres_schema, width = 7, height = 5, dpi = 300)
 ggsave(file.path(fig_dir, "Performance_box_line_w.png"), p_perf_w, width = 7, height = 5, dpi = 300)
-ggsave(file.path(fig_dir, "Performance_box_line_phi.png"), p_perf_phi, width = 7, height = 5, dpi = 300)
+ggsave(file.path(fig_dir, "Performance_box_line_Phi.png"), p_perf_phi, width = 7, height = 5, dpi = 300)
 ggsave(file.path(fig_dir, "Performance_box_line_theta_shift.png"), p_perf_theta_shift, width = 7, height = 5, dpi = 300)
+
+# Save combined 3-panel figures
+ggsave(file.path(fig_dir, "AC_box_line_w_Phi_theta_shift.png"), p_ac_three, width = 18, height = 5, dpi = 300)
+ggsave(file.path(fig_dir, "RT_box_line_w_Phi_theta_shift.png"), p_rt_three, width = 18, height = 5, dpi = 300)
+ggsave(file.path(fig_dir, "Performance_box_line_w_Phi_theta_shift.png"), p_perf_three, width = 18, height = 5, dpi = 300)
 
 cat("✅ Split figures saved to:", fig_dir, "\n")

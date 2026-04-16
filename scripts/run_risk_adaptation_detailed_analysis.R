@@ -1,7 +1,7 @@
 library(tidyverse)
 library(patchwork)
 
-results_dir <- "../results/final_v2_combo19"
+results_dir <- "../results/final"
 fig_dir <- file.path(results_dir, "figures")
 dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
 

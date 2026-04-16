@@ -1,35 +1,31 @@
 library(tidyverse)
 library(patchwork)
 
-results_dir <- "../results/final_v2_combo19"
+results_dir <- "../results/final_bestpair"
 fig_dir <- file.path(results_dir, "figures")
 dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
 
-run_summary <- read_csv(file.path(results_dir, "run_summary.csv"), show_col_types = FALSE) %>%
+all_results <- read_csv(file.path(results_dir, "all_results.csv"), show_col_types = FALSE)
+
+run_summary <- all_results %>%
+  mutate(total_RT = RT_1 + RT_2 + RT_3 + RT_4) %>%
+  group_by(model, strategy, combo_id, thres_schema, thres_item_final, risk, run) %>%
+  summarise(
+    AC = mean(AC, na.rm = TRUE),
+    performance = mean(performance, na.rm = TRUE),
+    RT = mean(total_RT, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
   mutate(
     model = factor(model, levels = c("original", "adapted")),
     risk = factor(risk, levels = c("Lc", "Hc")),
-    strategy = factor(strategy, levels = c("bonus_oriented", "payoff_oriented", "baseline"))
+    strategy = factor(strategy, levels = c("bonus_oriented", "payoff_oriented"))
   )
 
-# Select the two "best Lc" parameter points only
-best_pair <- run_summary %>%
-  filter(
-    (strategy == "bonus_oriented" & thres_schema == 50 & thres_item_final == 45) |
-      (strategy == "payoff_oriented" & thres_schema == 25 & thres_item_final == 10)
-  ) %>%
-  mutate(
-    strategy = droplevels(strategy)
-  )
+write_csv(run_summary, file.path(results_dir, "run_summary.csv"))
+write_csv(run_summary, file.path(fig_dir, "bestpair_selected_run_summary.csv"))
 
-if (nrow(best_pair) == 0) {
-  stop("No rows matched the selected best parameter combinations.")
-}
-
-write_csv(best_pair, file.path(fig_dir, "bestpair_selected_run_summary.csv"))
-
-# Summary table
-bestpair_summary <- best_pair %>%
+bestpair_summary <- run_summary %>%
   group_by(model, strategy, risk) %>%
   summarise(
     n = n(),
@@ -44,8 +40,7 @@ bestpair_summary <- best_pair %>%
 
 write_csv(bestpair_summary, file.path(fig_dir, "bestpair_summary.csv"))
 
-# Bonus-payoff gap by run
-gap_by_run <- best_pair %>%
+gap_by_run <- run_summary %>%
   select(model, risk, run, strategy, performance, AC, RT) %>%
   pivot_wider(names_from = strategy, values_from = c(performance, AC, RT)) %>%
   mutate(
@@ -77,7 +72,6 @@ did_tbl <- gap_summary %>%
 write_csv(gap_summary, file.path(fig_dir, "bestpair_gap_summary.csv"))
 write_csv(did_tbl, file.path(fig_dir, "bestpair_did.csv"))
 
-# Interaction stats: metric ~ strategy * risk (within each model)
 fit_interaction <- function(df, y) {
   fit <- lm(as.formula(paste0(y, " ~ strategy * risk")), data = df)
   co <- summary(fit)$coefficients
@@ -93,8 +87,8 @@ fit_interaction <- function(df, y) {
 }
 
 interaction_stats <- bind_rows(
-  lapply(levels(best_pair$model), function(m) {
-    d <- best_pair %>% filter(model == m)
+  lapply(levels(run_summary$model), function(m) {
+    d <- run_summary %>% filter(model == m)
     bind_rows(
       fit_interaction(d, "performance"),
       fit_interaction(d, "AC"),
@@ -105,9 +99,9 @@ interaction_stats <- bind_rows(
 
 write_csv(interaction_stats, file.path(fig_dir, "bestpair_interaction_stats.csv"))
 
-# ------------------------
-# Figures
-# ------------------------
+# Unified palette (match earlier blue-orange style)
+model_colors <- c("original" = "#4C78A8", "adapted" = "#F58518")
+strategy_colors <- c("bonus_oriented" = "#4C78A8", "payoff_oriented" = "#F58518")
 
 # 1) Overall bars
 p_perf <- ggplot(bestpair_summary, aes(x = model, y = perf_mean, fill = strategy)) +
@@ -117,6 +111,7 @@ p_perf <- ggplot(bestpair_summary, aes(x = model, y = perf_mean, fill = strategy
     position = position_dodge(0.75), width = 0.2, linewidth = 0.3
   ) +
   facet_wrap(~ risk) +
+  scale_fill_manual(values = strategy_colors) +
   theme_bw(base_size = 11) +
   labs(title = "Performance", x = "Model", y = "Mean performance")
 
@@ -127,6 +122,7 @@ p_ac <- ggplot(bestpair_summary, aes(x = model, y = AC_mean, fill = strategy)) +
     position = position_dodge(0.75), width = 0.2, linewidth = 0.3
   ) +
   facet_wrap(~ risk) +
+  scale_fill_manual(values = strategy_colors) +
   theme_bw(base_size = 11) +
   labs(title = "AC", x = "Model", y = "Mean AC")
 
@@ -137,53 +133,58 @@ p_rt <- ggplot(bestpair_summary, aes(x = model, y = RT_mean, fill = strategy)) +
     position = position_dodge(0.75), width = 0.2, linewidth = 0.3
   ) +
   facet_wrap(~ risk) +
+  scale_fill_manual(values = strategy_colors) +
   theme_bw(base_size = 11) +
   labs(title = "RT", x = "Model", y = "Mean RT")
 
 fig_overall <- (p_perf / p_ac / p_rt) +
-  plot_annotation(title = "Best-pair Exploratory Comparison")
+  plot_annotation(title = "Best-pair (rep50) Comparison")
 
-ggsave(file.path(fig_dir, "31_bestpair_overall.png"), fig_overall, width = 10, height = 12, dpi = 300)
+ggsave(file.path(fig_dir, "31_bestpair_overall_rep50.png"), fig_overall, width = 10, height = 12, dpi = 300)
 
 # 2) Interaction lines
 l_perf <- ggplot(bestpair_summary, aes(x = risk, y = perf_mean, color = strategy, group = strategy)) +
   geom_point(size = 2) + geom_line(linewidth = 0.8) +
   geom_errorbar(aes(ymin = perf_mean - perf_se, ymax = perf_mean + perf_se), width = 0.12, linewidth = 0.3) +
+  scale_color_manual(values = strategy_colors) +
   facet_wrap(~ model) + theme_bw(base_size = 11) +
   labs(title = "Performance", x = "Risk", y = "Mean performance")
 
 l_ac <- ggplot(bestpair_summary, aes(x = risk, y = AC_mean, color = strategy, group = strategy)) +
   geom_point(size = 2) + geom_line(linewidth = 0.8) +
   geom_errorbar(aes(ymin = AC_mean - AC_se, ymax = AC_mean + AC_se), width = 0.12, linewidth = 0.3) +
+  scale_color_manual(values = strategy_colors) +
   facet_wrap(~ model) + theme_bw(base_size = 11) +
   labs(title = "AC", x = "Risk", y = "Mean AC")
 
 l_rt <- ggplot(bestpair_summary, aes(x = risk, y = RT_mean, color = strategy, group = strategy)) +
   geom_point(size = 2) + geom_line(linewidth = 0.8) +
   geom_errorbar(aes(ymin = RT_mean - RT_se, ymax = RT_mean + RT_se), width = 0.12, linewidth = 0.3) +
+  scale_color_manual(values = strategy_colors) +
   facet_wrap(~ model) + theme_bw(base_size = 11) +
   labs(title = "RT", x = "Risk", y = "Mean RT")
 
 fig_lines <- (l_perf / l_ac / l_rt) +
-  plot_annotation(title = "Best-pair Strategy x Risk Interaction")
+  plot_annotation(title = "Best-pair (rep50) Strategy x Risk Interaction")
 
-ggsave(file.path(fig_dir, "32_bestpair_interaction_lines.png"), fig_lines, width = 10, height = 12, dpi = 300)
+ggsave(file.path(fig_dir, "32_bestpair_interaction_lines_rep50.png"), fig_lines, width = 10, height = 12, dpi = 300)
 
 # 3) DoD bars
 fig_did <- ggplot(did_tbl, aes(x = metric, y = DoD_Hc_minus_Lc, fill = model)) +
   geom_col(position = position_dodge(width = 0.7), width = 0.62) +
   geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.3) +
+  scale_fill_manual(values = model_colors) +
   theme_bw(base_size = 11) +
   theme(axis.text.x = element_text(angle = 15, hjust = 1)) +
   labs(
-    title = "Best-pair DoD",
+    title = "Best-pair (rep50) DoD",
     subtitle = "[(bonus - payoff) in Hc] - [(bonus - payoff) in Lc]",
     x = "Metric",
     y = "DoD (Hc - Lc)",
     fill = "Model"
   )
 
-ggsave(file.path(fig_dir, "33_bestpair_did.png"), fig_did, width = 9, height = 5, dpi = 300)
+ggsave(file.path(fig_dir, "33_bestpair_did_rep50.png"), fig_did, width = 9, height = 5, dpi = 300)
 
 saveRDS(
   list(
@@ -192,7 +193,7 @@ saveRDS(
     did_tbl = did_tbl,
     interaction_stats = interaction_stats
   ),
-  file = file.path(fig_dir, "bestpair_analysis_data.rds")
+  file = file.path(fig_dir, "bestpair_analysis_data_rep50.rds")
 )
 
-cat("Best-pair exploratory analysis done. Outputs saved to:", fig_dir, "\n")
+cat("Best-pair rep50 analysis done. Outputs saved to:", fig_dir, "\n")

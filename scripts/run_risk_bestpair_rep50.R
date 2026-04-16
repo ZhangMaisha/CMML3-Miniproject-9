@@ -119,7 +119,7 @@ n_sims <- 50
 types <- c("Lc", "Hc")
 model_flags <- c(FALSE, TRUE) # original, adapted
 
-output_dir <- "../results/final_v2_bestpair_rep50"
+output_dir <- "../results/final_bestpair"
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
 output_file <- file.path(output_dir, "all_results.csv")
@@ -211,4 +211,3 @@ if (file.exists(output_file)) {
   write_csv(run_summary, run_summary_file)
   cat(sprintf("Run summary saved: %s\n", run_summary_file))
 }
-

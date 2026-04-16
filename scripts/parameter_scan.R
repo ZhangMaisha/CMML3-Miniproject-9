@@ -163,7 +163,7 @@ test_one_parameter <- function(param_name, param_values,
 # ============================================
 
 # Create main output directory
-main_output_dir <- "results/param_scan_20260412"
+main_output_dir <- "results/param_scan"
 if (!dir.exists(main_output_dir)) dir.create(main_output_dir, recursive = TRUE)
 
 # Record start time
