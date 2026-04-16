@@ -1,0 +1,7 @@
+
+ANOVA: Bonus-oriented vs Payoff-oriented vs Baseline
+            Df Sum Sq Mean Sq F value   Pr(>F)    
+strategy     1 101.59   101.6   59.64 4.04e-07 ***
+Residuals   18  30.66     1.7                     
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1

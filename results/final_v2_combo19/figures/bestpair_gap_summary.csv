@@ -1,0 +1,13 @@
+model,risk,metric,mean_gap,se_gap
+original,Lc,AC (bonus - payoff),0.05380952380952383,0.03808193727412765
+original,Lc,Performance (bonus - payoff),0.6823382173382174,2.1107104892849406
+original,Lc,RT (bonus - payoff),35.22892519536036,3.23309364457933
+original,Hc,AC (bonus - payoff),0.05380952380952383,0.03808193727412765
+original,Hc,Performance (bonus - payoff),1.3134188034188048,1.9284278359516152
+original,Hc,RT (bonus - payoff),35.22892519536036,3.23309364457933
+adapted,Lc,AC (bonus - payoff),0.0024374355005160166,0.0457848072923203
+adapted,Lc,Performance (bonus - payoff),-0.7312435500515999,2.1735205809211506
+adapted,Lc,RT (bonus - payoff),28.44790574742634,2.5965314640354524
+adapted,Hc,AC (bonus - payoff),0.05380952380952383,0.03808193727412765
+adapted,Hc,Performance (bonus - payoff),1.3134188034188048,1.9284278359516152
+adapted,Hc,RT (bonus - payoff),35.22892519536036,3.23309364457933

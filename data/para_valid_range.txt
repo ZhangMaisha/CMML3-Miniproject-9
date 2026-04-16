@@ -1,0 +1,21 @@
+init.range.fixed.0804 <- data.frame(
+  Beta_N = c(0.001, 0.7),
+  Beta_gN = c(0.001, 1),
+  w = c(0.1, 0.9),
+  Phi = c(1, 50),
+  decay_speed = c(0.99, 0.9995),
+  decay_speed_thres = c(0.99, 0.9995),
+  thres_item_final = c(7.8, 50),
+  theta_shift = c(1, 10),
+  thres_schema = c(7.8, 50),
+  
+  a_schema = c(0.01, 1),
+  h_schema = c(10, 3000),
+  Beta_Var = c(0.001, 0.4),
+  a_generic = c(0.01, 1),
+  h_generic = c(10, 3000),
+  Beta_gVar = c(0.001, 1),
+  thres_item_inter = c(0.01, 7.75),
+  timevar = c(0.0000001, 0.002),
+  modeltimestep = c(0.001, 0.1)
+)

@@ -1,0 +1,7 @@
+strategy,type,best_thres_schema,best_thres_item_final,best_performance
+baseline,Hc,30,15,72
+baseline,Lc,30,15,72
+bonus_oriented,Hc,40,40,72
+bonus_oriented,Lc,40,40,72
+payoff_oriented,Hc,15,10,72
+payoff_oriented,Lc,15,10,72

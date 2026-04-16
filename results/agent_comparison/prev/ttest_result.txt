@@ -1,0 +1,13 @@
+T-test: Bonus-oriented vs Payoff-oriented
+
+	Welch Two Sample t-test
+
+data:  mean_performance by strategy
+t = 7.7225, df = 12.808, p-value = 3.603e-06
+alternative hypothesis: true difference in means between group bonus_oriented and group payoff_oriented is not equal to 0
+95 percent confidence interval:
+ 3.244702 5.770559
+sample estimates:
+ mean in group bonus_oriented mean in group payoff_oriented 
+                     28.58057                      24.07294 
+

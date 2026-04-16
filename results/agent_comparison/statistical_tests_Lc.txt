@@ -1,0 +1,49 @@
+=== T-test: Bonus-oriented vs Payoff-oriented (parameter level, Lc only) ===
+
+Performance:
+
+	Welch Two Sample t-test
+
+data:  mean_performance by strategy
+t = 5.4827, df = 14.939, p-value = 6.398e-05
+alternative hypothesis: true difference in means between group bonus_oriented and group payoff_oriented is not equal to 0
+95 percent confidence interval:
+ 2.714540 6.169518
+sample estimates:
+ mean in group bonus_oriented mean in group payoff_oriented 
+                     31.10426                      26.66223 
+
+
+Baseline performance: 28.99 
+
+AC:
+
+	Welch Two Sample t-test
+
+data:  mean_AC by strategy
+t = 4.9225, df = 15.023, p-value = 0.0001833
+alternative hypothesis: true difference in means between group bonus_oriented and group payoff_oriented is not equal to 0
+95 percent confidence interval:
+ 0.05774727 0.14592551
+sample estimates:
+ mean in group bonus_oriented mean in group payoff_oriented 
+                    0.4179718                     0.3161354 
+
+
+Baseline AC: 0.36 
+
+RT:
+
+	Welch Two Sample t-test
+
+data:  mean_RT by strategy
+t = 19.547, df = 10.904, p-value = 7.776e-10
+alternative hypothesis: true difference in means between group bonus_oriented and group payoff_oriented is not equal to 0
+95 percent confidence interval:
+ 30.88500 38.73248
+sample estimates:
+ mean in group bonus_oriented mean in group payoff_oriented 
+                     56.95934                      22.15060 
+
+
+Baseline RT: 28.5 
