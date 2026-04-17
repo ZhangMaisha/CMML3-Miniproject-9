@@ -2,9 +2,9 @@
 #### Functions for other scripts
 #### source() this file in other scripts for better readability
 
-### sample a exploration time（探索某个 schema 花了多久） from the 正态distribution
+### Sample exploration time for a schema from a normal distribution
 ### if it is negative, then re-sample
-## expN：平均探索时间；expVar：探索时间的波动
+## expN: mean exploration time; expVar: variability of exploration time
 explengthsample <- function(expN,expVar){
   out = rnorm(1,expN,expVar)
   while (out <= 0)
@@ -14,8 +14,8 @@ explengthsample <- function(expN,expVar){
 }
 
 ### calculate the log function
-## 把 confidence 反推回 learning progress
-## learning progress 和 confidence 之间是 sigmoid 关系
+## Convert confidence back to learning progress
+## Learning progress and confidence follow a sigmoid relationship
 log_inve <- function (x,a,h=0){
   if ((1/x)-1 > 0){
     out = ((log((1/x)-1)/-a) + h)
@@ -42,18 +42,18 @@ Bonus <- function (Con){
 ## recovery status changes over time
 
 ## compute accuracy and feedback
-# item payoff＝单个选项本身的价值（你选这个东西直接给多少分）；
-# schema payoff＝这一整类（同一schema）被正确识别后的额外价值（给你bonus用的）。
-# S = 四个 item payoff 之和
-# M = 多数 schema 的 payoff（只在 low risk 且 3/4 对时用）
+# item payoff = value of each selected item (direct reward from item choice).
+# schema payoff = additional reward for correctly matching items from the same schema.
+# S = sum of payoff across the 4 chosen items
+# M = payoff of the majority schema (used only in low risk with 3/4 correct)
 # High risk
-# 4/4 对   → AC=1   → performance = 3S
-# 3/4 对   → AC=0.5 → performance = S
-# 其他     → AC=0   → performance = S
+# 4/4 correct  -> AC = 1   -> performance = 3S
+# 3/4 correct  -> AC = 0.5 -> performance = S
+# otherwise    -> AC = 0   -> performance = S
 # Low risk
-# 4/4 对   → AC=1   → performance = 3S
-# 3/4 对   → AC=0.5 → performance = S + 3M
-# 其他     → AC=0   → performance = S
+# 4/4 correct  -> AC = 1   -> performance = 3S
+# 3/4 correct  -> AC = 0.5 -> performance = S + 3M
+# otherwise    -> AC = 0   -> performance = S
 # mean.payoff = S / 4
 
 computeAC_performance <- function(risk, Schema_res, Item_EI, Outputs_cho, ThisPhase, schemainfo){
@@ -93,11 +93,11 @@ computeAC_performance <- function(risk, Schema_res, Item_EI, Outputs_cho, ThisPh
 
 
 ## Model Main Function
-## 给一些参数，模拟一个或多个subject，输出选择、RT、performance、confidence变化
-# 1. Param.df是参数表。每行对应一个 simulated subject。代码从这里取出：a_schema、Beta_N等。是最可能改的。
-# 2. type实验条件/组别，比如 high risk / low risk，是否 break 后换新 schema。
-# 3. exp_type是：painting 或 quote，用于代码里读不同数据文件
-# 4. sim.mode："before"、"after"、"whole"。模拟 break 前、模拟 break 后、模拟整个实验。和 novelty / break 设计有关。
+## Given model parameters, simulate one or more subjects and output choices, RT, performance, and confidence trajectories
+# 1. Param.df: parameter table, one row per simulated subject (e.g., a_schema, Beta_N, etc.).
+# 2. type: experimental condition (e.g., high risk / low risk; whether novelty appears after break).
+# 3. exp_type: painting or quote, used to load different input files.
+# 4. sim.mode: "before", "after", or "whole"; controls period relative to break/novelty design.
 simulation <- function(Param.df, type, exp_type, save=F, savepath="",
                        sim.mode=c("before", "after", "whole")[3], 
                        before.path=NA,
@@ -164,10 +164,10 @@ simulation <- function(Param.df, type, exp_type, save=F, savepath="",
     ##### except for the schema selection part, other parts are the same as what we discussed
     #### create a data frame to store the outputs ####
     
-    # RT是reaction time 指你花了多少时间反应 比如rt1就是选出第一个item的时间
-    # clock是实验的总时间 ctime是用来算每次reaction time的
-    # AS是attention shift 是指注意力转移到这个item上 
-    # 就比如你看好多张图 你先看a图 再看b图 再看a图 你的注意力就有两次在a图上
+    # RT: reaction time, e.g., RT_1 is the time to choose the first item.
+    # clock: total experiment time; CTime: local timer for each reaction time.
+    # AS: attention shift count for each item.
+    # Example: if attention goes A -> B -> A, item A receives two attention visits.
     
     Outputs_cho = data.frame(Subject = c(rep(Subject, max_Round*2)), Round = c(rep(1:(max_Round*2),each=2)),Phase = c(1:(max_Round*2)),
                              Schema = c(rep(0,max_Round*2)),Schema_RT = c(rep(0,max_Round*2)),
@@ -253,7 +253,7 @@ simulation <- function(Param.df, type, exp_type, save=F, savepath="",
       }
       
       ## BREAK LOGIC
-      # break是在第35min的时候引入的，也就是10min exploration后的25min
+      # Break is introduced at 35 min (after 10 min exploration + 25 min task)
       if (break_happens == 0 & clock >= 1500){
         
         # if we want to simulate after: we import the last set of confidence for each Subject
@@ -388,7 +388,7 @@ simulation <- function(Param.df, type, exp_type, save=F, savepath="",
       Gcon$conN = Gcon$conN + Beta_gN*(Con_afterExp - Con_PriorExp)
       Gcon$conVar = Gcon$conVar + Beta_gVar*(abs(Con_afterExp - Con_PriorExp) - Gcon$conVar)
       
-      # 选择第一轮展示的schema
+      # Select schemas shown on the first decision screen
       Thischosen = schemainfo %>% 
         group_by(payoff) %>% 
         summarise(chosen = sample(schemaID, size = 1, prob = NULL)) 
@@ -450,7 +450,7 @@ simulation <- function(Param.df, type, exp_type, save=F, savepath="",
         Item_EI$evidence = 0 # evidence integration
         Item_EI$recovery = 0
         
-        # Timevar是参数T
+        # Timevar corresponds to parameter T
         Item_EI$timevar = 1
         Item_EI$decision = 0
         Item_EI$OB = 0
@@ -462,7 +462,7 @@ simulation <- function(Param.df, type, exp_type, save=F, savepath="",
         
         #### let's start the evidence integration ####
         schema_decision = 0
-        # Finish: 已选择的个数
+        # Finish: number of items already selected
         Finish = 0
         
         ## use to get the dwell choice, as Finish changes is faster
@@ -470,7 +470,7 @@ simulation <- function(Param.df, type, exp_type, save=F, savepath="",
         attention = 0
         shift = 0
         
-        # clock是实验的总时间 ctime是用来算每次reaction time的
+        # clock: total experiment time; CTime: local timer for each reaction time.
         CTime = 0
         dwelltime = 0
         
@@ -486,10 +486,10 @@ simulation <- function(Param.df, type, exp_type, save=F, savepath="",
           
           if (attention == 0) { ### i.e., when decision has not been made and no item were attended
             
-            # 此时timevar表示的是revisit
+            # Here timevar reflects revisit weighting
             Item_EI$timevar = 1-(1/(exp(timevar*Item_EI$recovery)))
             
-            ## 如果场上只剩一个item attention直接到这个item
+            ## If only one item remains, attention goes directly to that item
             if (sum(Item_EI$decision == 0) == 1){ 
               attention = Item_EI$ID[Item_EI$decision == 0]
             }else{ ## otherwise, use prob formula to choose attention
@@ -581,7 +581,7 @@ simulation <- function(Param.df, type, exp_type, save=F, savepath="",
                                                                               Item_EI$status == 1]
                 Outputs_cho[ThisPhase, paste0("RT_", Finish)] = CTime
                 
-                # 在完成这个选择的时候我看了多少不同的item
+                # Number of distinct items viewed before this choice
                 Outputs_cho[ThisPhase, paste0("OB_", Finish)] = sum(Item_EI$OB == 1)
                 
                 # Attention shift
@@ -713,7 +713,7 @@ simulation <- function(Param.df, type, exp_type, save=F, savepath="",
       
       ## record the learn time, there are 3 time it is update per round
       ## 1. exploration; 2. 2 phases based on feedback
-      ## 每轮都有三次机会学习，一次探索，两次accuracy反馈
+      ## Each round has three learning updates: one exploration and two feedback phases
       
       Time = rep(1:((ThisRound-1)*3),each=10)
       Outputs_learn <- cbind(Outputs_learn, Time)
