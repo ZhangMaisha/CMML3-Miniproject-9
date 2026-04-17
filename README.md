@@ -17,12 +17,13 @@ Computational model-based analysis of schema-based learning and decision-making 
 R packages used:
 
 - `tidyverse`
+- `ggplot2`
 - `patchwork`
 
 Install if needed:
 
 ```r
-install.packages(c("tidyverse", "patchwork"))
+install.packages(c("tidyverse", "ggplot2", "patchwork"))
 ```
 
 ## Scripts and Usage
